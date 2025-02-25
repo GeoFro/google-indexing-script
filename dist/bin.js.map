@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/bin.ts"],"names":[],"mappings":";mOACA","sourcesContent":["#!/usr/bin/env node\nrequire(\"./cli\");\n"]}
