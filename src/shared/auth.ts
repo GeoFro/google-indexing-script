@@ -9,6 +9,7 @@ import os from "os";
  * @param private_key - The private key of the service account.
  * @param customPath - (Optional) Custom path to the service account JSON file.
  * @returns The access token.
+ * @throws Error if credentials are missing or invalid
  */
 export async function getAccessToken(client_email?: string, private_key?: string, customPath?: string) {
   if (!client_email && !private_key) {
@@ -19,9 +20,7 @@ export async function getAccessToken(client_email?: string, private_key?: string
     const isCustomFile = !!customPath && fs.existsSync(customPath);
 
     if (!isFile && !isFileFromHome && !isCustomFile) {
-      console.error(`❌ ${filePath} not found, please follow the instructions in README.md`);
-      console.error("");
-      process.exit(1);
+      throw new Error(`${filePath} not found, please follow the instructions in README.md`);
     }
 
     const key = JSON.parse(
@@ -31,15 +30,11 @@ export async function getAccessToken(client_email?: string, private_key?: string
     private_key = key.private_key;
   } else {
     if (!client_email) {
-      console.error("❌ Missing client_email in service account credentials.");
-      console.error("");
-      process.exit(1);
+      throw new Error("Missing client_email in service account credentials.");
     }
 
     if (!private_key) {
-      console.error("❌ Missing private_key in service account credentials.");
-      console.error("");
-      process.exit(1);
+      throw new Error("Missing private_key in service account credentials.");
     }
   }
 

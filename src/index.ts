@@ -37,12 +37,11 @@ export type IndexOptions = {
  * Indexes the specified domain or site URL.
  * @param input - The domain or site URL to index.
  * @param options - (Optional) Additional options for indexing.
+ * @throws Error if there are issues with input parameters or API operations
  */
 export const index = async (input: string = process.argv[2], options: IndexOptions = {}) => {
   if (!input) {
-    console.error("❌ Please provide a domain or site URL as the first argument.");
-    console.error("");
-    process.exit(1);
+    throw new Error("Please provide a domain or site URL as the first argument.");
   }
 
   if (!options.client_email) {
@@ -69,9 +68,7 @@ export const index = async (input: string = process.argv[2], options: IndexOptio
   const cachePath = path.join(".cache", `${convertToFilePath(siteUrl)}.json`);
 
   if (!accessToken) {
-    console.error("❌ Failed to get access token, check your service account credentials.");
-    console.error("");
-    process.exit(1);
+    throw new Error("Failed to get access token, check your service account credentials.");
   }
 
   siteUrl = await checkSiteUrl(accessToken, siteUrl);
@@ -82,9 +79,7 @@ export const index = async (input: string = process.argv[2], options: IndexOptio
     const [sitemaps, pagesFromSitemaps] = await getSitemapPages(accessToken, siteUrl);
 
     if (sitemaps.length === 0) {
-      console.error("❌ No sitemaps found, add them to Google Search Console and try again.");
-      console.error("");
-      process.exit(1);
+      throw new Error("No sitemaps found, add them to Google Search Console and try again.");
     }
 
     pages = pagesFromSitemaps;

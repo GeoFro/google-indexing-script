@@ -84,6 +84,7 @@ export async function getSites(accessToken: string) {
  * @param accessToken - The access token for authentication.
  * @param siteUrl - The URL of the site to check.
  * @returns The corrected URL if found, otherwise the original site URL.
+ * @throws Error if the site URL is invalid or inaccessible
  */
 export async function checkSiteUrl(accessToken: string, siteUrl: string) {
   const sites = await getSites(accessToken);
@@ -103,9 +104,7 @@ export async function checkSiteUrl(accessToken: string, siteUrl: string) {
     formattedUrls.push(convertToHTTP(siteUrl.replace("sc-domain:", "")));
     formattedUrls.push(convertToHTTPS(siteUrl.replace("sc-domain:", "")));
   } else {
-    console.error("❌ Unknown site URL format.");
-    console.error("");
-    process.exit(1);
+    throw new Error("Unknown site URL format.");
   }
 
   // Check if any of the formatted URLs are accessible
@@ -116,9 +115,7 @@ export async function checkSiteUrl(accessToken: string, siteUrl: string) {
   }
 
   // If none of the formatted URLs are accessible
-  console.error("❌ This service account doesn't have access to this site.");
-  console.error("");
-  process.exit(1);
+  throw new Error("This service account doesn't have access to this site.");
 }
 
 /**
@@ -234,6 +231,7 @@ export function getEmojiForStatus(status: Status) {
  * @param url - The URL for which to retrieve metadata.
  * @param options - The options for the request.
  * @returns The status of the request.
+ * @throws Error if there are issues with the request or rate limits are exceeded
  */
 export async function getPublishMetadata(accessToken: string, url: string, options?: { retriesOnRateLimit: number }) {
   const response = await fetchRetry(
@@ -264,12 +262,7 @@ export async function getPublishMetadata(accessToken: string, url: string, optio
       await new Promise((resolve) => setTimeout(resolve, RPM_WATING_TIME));
       await getPublishMetadata(accessToken, url, { retriesOnRateLimit: options.retriesOnRateLimit - 1 });
     } else {
-      console.error("🚦 Rate limit exceeded, try again later.");
-      console.error("");
-      console.error("   Quota: https://developers.google.com/search/apis/indexing-api/v3/quota-pricing#quota");
-      console.error("   Usage: https://console.cloud.google.com/apis/enabled");
-      console.error("");
-      process.exit(1);
+      throw new Error("Rate limit exceeded, try again later. Check quota at https://developers.google.com/search/apis/indexing-api/v3/quota-pricing#quota");
     }
   }
 
@@ -286,6 +279,7 @@ export async function getPublishMetadata(accessToken: string, url: string, optio
  * Requests indexing for the given URL.
  * @param accessToken - The access token for authentication.
  * @param url - The URL to be indexed.
+ * @throws Error if there are issues with the request or rate limits are exceeded
  */
 export async function requestIndexing(accessToken: string, url: string) {
   const response = await fetchRetry("https://indexing.googleapis.com/v3/urlNotifications:publish", {
@@ -307,12 +301,7 @@ export async function requestIndexing(accessToken: string, url: string) {
 
   if (response.status >= 300) {
     if (response.status === 429) {
-      console.error("🚦 Rate limit exceeded, try again later.");
-      console.error("");
-      console.error("   Quota: https://developers.google.com/search/apis/indexing-api/v3/quota-pricing#quota");
-      console.error("   Usage: https://console.cloud.google.com/apis/enabled");
-      console.error("");
-      process.exit(1);
+      throw new Error("Rate limit exceeded, try again later. Check quota at https://developers.google.com/search/apis/indexing-api/v3/quota-pricing#quota");
     } else {
       console.error(`❌ Failed to request indexing.`);
       console.error(`Response was: ${response.status}`);
